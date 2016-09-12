@@ -15,3 +15,4 @@ The engine handles
 parser was made from scratch
 error handling and syntax handling has been done
 "group by" was not asked to be implemented
+~500 lines of code

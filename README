@@ -8,10 +8,10 @@ table1 ---> A,B,C
 table2 --->A,B
 
 The engine handles 
--queries having aggregate functions such as sum, average, min and max only.
+-queries having column names (A,B.. or table1.A, table2.B..) and aggregate functions such as sum, average, min and max only.
 -join on the 2 table given any condition
 -handles where queries with <,<=, >,>=, <> 
 
-PARSER WAS MADE FROM SCRATCH
+parser was made from scratch
 error handling and syntax handling has been done
 "group by" was not asked to be implemented

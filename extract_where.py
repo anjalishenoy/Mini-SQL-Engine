@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from helper import *
 
-def extract_where(joinTable, whereQuery,fromQuery):
+def extract_where(joinTable, whereQuery,fromQuery,L):
 
 	if whereQuery == []:
 		#No where condition
@@ -15,8 +15,8 @@ def extract_where(joinTable, whereQuery,fromQuery):
 
 	#String to operator
 	ops = { '<': operator.lt, '<=': operator.le, '=':operator.eq, '<>':operator.ne, '>=':operator.ge, '>':operator.gt }	
-	hash = getHash(fromQuery)
-	
+	hash = getHash(fromQuery,L)
+	table=joinTable
 	if len(task)==1:
 		#single condition
 		result, table=singleCondiiton(task, hash, ops, joinTable)
@@ -30,5 +30,5 @@ def extract_where(joinTable, whereQuery,fromQuery):
 	else:
 		return True, table
 
-	return True, joinTable
+	return True, table
 

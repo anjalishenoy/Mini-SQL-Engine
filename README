@@ -3,12 +3,10 @@ This is a simple mini-SQL engine
 to run the engine,type
 $ bash 201401114.sh
 
-it works on the two tables given in the 'data' folder with the format:
-table1 ---> A,B,C
-table2 --->A,B
+it works on the two tables given in the 'metadata' folder.
 
 The engine handles 
--queries having column names (A,B.. or table1.A, table2.B..) and aggregate functions such as sum, average, min and max only.
+-queries having column names (A,B.. or table1.A, table2.B..) and aggregate functions such as sum, average, min and max distinct only.
 -join on the 2 table given any condition
 -handles where queries with <,<=, >,>=, <> 
 

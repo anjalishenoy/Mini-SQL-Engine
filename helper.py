@@ -1,50 +1,70 @@
 #!/usr/bin/python
+import fnmatch
+import os
+from table_class import *
 import operator
 import csv
 import re
 def getDB():
 	"Get the database into a list"
-	table1=[]
-	with open('data/table1.csv', 'rb') as csvfile:
-		content = csv.reader(csvfile, delimiter=',')
-		for row in content:
-			table1.append(row)
 
-	table2=[]
-	with open('data/table2.csv', 'rb') as csvfile:
-		content = csv.reader(csvfile, delimiter=',')
-		for row in content:
-			table2.append(row)
+	table_list=[]
+	
+	f = open('data/metadata.txt', 'r')
+	flag=0
+	buf=f.readline().strip()
+	while buf != '':
+		if buf=="<begin_table>":
+			name=f.readline().strip()
+			attr=[]	#Attributes of table
+			buf=f.readline().strip()
 
-	return table1, table2
+			#attribute list
+			while buf !="<end_table>":
+				attr.append(buf)
+				buf=f.readline().strip()
+
+			for file in os.listdir('data'):
+				if fnmatch.fnmatch(file, name+'.csv'):
+					break
+			file='data/'+file
+			table=[]
+			with open(file, 'rb') as csvfile:
+				content = csv.reader(csvfile, delimiter=',')
+				for row in content:
+					table.append(row)
+
+			table_list.append(Table(name,attr,table))
+
+		buf=f.readline().strip()
+
+	return table_list
 
 
 #----------------------------------------------------------------
 
-def validateTablename(fromQuery, table1, table2):
+def validateTablename(fromQuery, table):
 	"Check for errors in table name"
 	X=[]
 	Y=[]
-	if fromQuery[0] == 'table1':
-		X = table1;
-		if len(fromQuery)>1:
-			if fromQuery[1] == 'table2':
-				Y = table2;
-			elif fromQuery[1] == 'table1':
-				Y = table1
-			else:
-				return False,"","" 	#Error in table2 name
-	elif fromQuery[0] == 'table2':
-		X = table2;
-		if len(fromQuery)>1:
-			if fromQuery[1] == 'table1' :
-				Y = table1
-			elif fromQuery[1] == 'table2':
-				Y = table2
-			else:
-				return False,"",""
-	else:
-		return False,"",""
+	flagX=0
+	flagY=0
+	for q in fromQuery:
+		found=0
+		for t in table:
+			if q == t.name:
+				found=1
+				if flagX==0:
+					flagX=1
+					X=t.table
+				elif flagY==0:
+					flagY=1
+					Y=t.table
+				else:
+					#More than 3 tables
+					return False,"",""
+		if found==0:
+			return False,"",""
 
 	return True,X,Y
 
@@ -65,22 +85,37 @@ def join(X,Y):
 
 #-----------------------------------------------------------------
 
-def getHash(fromQuery):
+def getHash(fromQuery,L,selectQuery):
 	"Return how to index table elements"
 
-	table1_hash = {'table1.A':0, 'table1.B':1, 'table1.C':2, 'A':0, 'B':1, 'C':2}		#If only table1 in fromQuery
-	table2_hash = {'table2.A':0, 'table2.B':1, 'A':0, 'B':1}							#If only table2 in fromQuery
-	join12_hash = {'table1.A':0, 'table1.B':1, 'table1.C':2,'table2.A':3, 'table2.B':4}	#If table1,table2
-	join21_hash = {'table2.A':0, 'table2.B':1, 'table1.A':2,'table1.B':3, 'table1.C':4}	#If table2, table1
+	i=0
+	dict={}
+	for t in L:
+		for attr in t.attr:
+			dict[t.name+'.'+attr]=i;
+			i=i+1
 
-	if fromQuery[0] == 'table1' and len(fromQuery)==1:
-		return table1_hash
-	elif fromQuery[0] == 'table2' and len(fromQuery)==1:
-		return table2_hash
-	elif fromQuery[0] == 'table1' and len(fromQuery)==2:
-		return join12_hash
-	elif fromQuery[0] == 'table2' and len(fromQuery)==2:
-		return join21_hash
+	i=0;
+	#if len(L)==1:
+	#	for attr in L[0].attr:
+	#		dict[attr]=i;
+	#		i=i+1;
+
+	attr1=L[0].attr;
+	if len(L)>1:
+		attr2=L[1].attr;
+
+	new_dict=dict;
+	for a in attr1:
+		for b in attr2:
+			if a == b:
+				return dict;
+				#found same column names
+			else:
+				new_dict[a]=i;
+				new_dict[b]=i+len(attr);
+
+	return new_dict
 
 #------------------------------------------------------------------------
 
@@ -109,9 +144,16 @@ def getCondition(whereQuery):
 
 #--------------------------------------------------------------------------
 def printTable(table, query):
-	print query
+	for q in query:
+		print q,
+	print ""
 	for row in table:
-		print row
+		if isinstance(row,list):
+			for element in row:
+				print element,
+			print ""
+		else:
+			print row
 
 
 #------------------------------------------------
@@ -180,14 +222,6 @@ def doubleCondition(task,hash,ops,joinTable,condition):
 			i3=row[hash[r]]
 		else:
 			return False,[]
-
-		if z in hash:
-			i4 = hash[z]
-		elif re.search('[a-zA-Z]', z):
-			#found letters, A>Ab99-hash not allowed
-			return False,[]
-		else:
-			i4=int(z)
 
 		if q in hash:
 			i2 = row[hash[q]]

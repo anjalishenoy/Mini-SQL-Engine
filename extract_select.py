@@ -1,8 +1,8 @@
 #!/usr/bin/python
 from helper import *
 import sys
-def extract_select(joinTable, selectQuery, fromQuery):
-	l=['MAX', 'MIN', 'SUM', 'AVERAGE','max','min','sum','average']
+def extract_select(joinTable, selectQuery, fromQuery,L):
+	l=['MAX', 'MIN', 'SUM', 'AVERAGE','DISTINCT','max','min','sum','average','distinct']
 	flag=0
 	m={}	#Map
 	finalTable=[]
@@ -15,10 +15,11 @@ def extract_select(joinTable, selectQuery, fromQuery):
  	for func in l:
 		for str in selectQuery:
 			if func in str:
+				#to check if any function is used
 				flag=1
 				break
 
-	hash = getHash(fromQuery)
+	hash = getHash(fromQuery,L)
 	if flag==0:
 		#No call to functions
 		index=[]
@@ -80,11 +81,14 @@ def extract_select(joinTable, selectQuery, fromQuery):
 
 		#Operating on columns
 		sumArr=[0]*len(col)
+		distinctArr=[{}]*len(col)	#creating dictionary for 
 		maxArr=[tempTable[0][0]]*len(col)	#initialise with [intmin intmin..]
 		minArr=[tempTable[0][0]]*len(col)		#initialise with [intmax intmax.. ]
 
 		for row in tempTable:
-			for element in row:
+			for i in range(len(row)):
+				element=row[i]
+				distinctArr[i][element]='a'
 				sumArr[i]=sumArr[i]+int(element)
 				maxArr[i]=max(maxArr[i],int(element))
 				minArr[i]=min(minArr[i],int(element))
@@ -100,8 +104,8 @@ def extract_select(joinTable, selectQuery, fromQuery):
 				finalTable.append(maxArr[i])
 			elif operation[i] in ['MIN', 'min']:
 				finalTable.append(minArr[i])
-
-
+			elif operation[i] in ['DISTINCT', 'distinct']:
+				finalTable=list(distinctArr[i].keys())
 
 	return True, finalTable
 

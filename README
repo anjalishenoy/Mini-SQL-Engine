@@ -3,7 +3,7 @@ This is a simple mini-SQL engine
 to run the engine,type
 $ bash 201401114.sh
 
-it works on the two tables given in the 'metadata' folder.
+it works on the tables of formate given in the 'metadata.txt' in data folder.
 
 The engine handles 
 -queries having column names (A,B.. or table1.A, table2.B..) and aggregate functions such as sum, average, min and max distinct only.
